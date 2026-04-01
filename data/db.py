@@ -3,9 +3,12 @@
 import sqlite3
 from config import DB_PATH
 
+# open connection to database file at DB_PATH
 def get_connection():
     return sqlite3.connect(DB_PATH)
 
+# set up db structure 
+    # get conn, create cursor, execute SQL command(s), commit changes, close conn
 def init_DB():
     conn = get_connection()
     cursor = conn.cursor()
