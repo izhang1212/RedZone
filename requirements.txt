@@ -1,0 +1,16 @@
+numpy
+pandas
+scipy
+nfl_data_py
+scikit-learn
+
+requests
+httpx
+
+sqlalchemy
+
+matplotlib
+plotly
+streamlit
+
+python-dotenv
