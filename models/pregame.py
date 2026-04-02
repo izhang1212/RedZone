@@ -1,7 +1,10 @@
+# handles pregame prob (underdog, favorite, 50/50)
+
 import numpy as np
 from scipy.stats import norm
 
-# converts an nfl point spread into win prob
+# converts an nfl point spread into win 
+    # use normal cumulative dist function (norm.cdf) to map spread to prob
 def spread_to_win_prob(spread):
     if spread is None:
         return 0.5

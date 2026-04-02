@@ -9,7 +9,7 @@ def get_connection():
 
 # set up db structure 
     # get conn, create cursor, execute SQL command(s), commit changes, close conn
-def init_DB():
+def init_db():
     conn = get_connection()
     cursor = conn.cursor()
 

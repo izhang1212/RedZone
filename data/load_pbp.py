@@ -4,15 +4,13 @@ from data.db import get_connection
 from config import TERMS
 
 # download pbp data and save it to sqlite
-def fetch_and_store():
+def fetch_and_store_pbp():
     # fetch data for seasons defined in config.py
     df = nfl.import_p_p_data(TERMS["seasons"])
 
     # define only cols we need
     cols = [
-        'game_id', 'play_id', 'game_seconds_remaining', 'score_differential',
-        'down', 'ydstogo', 'yardline_100', 'posteam_timeouts_remaining',
-        'defteam_timeouts_remaining', 'wp'
+        'game_id', 'play_id', 'game_seconds_remaining', 'score_differential', 'down', 'ydstogo', 'yardline_100', 'posteam_timeouts_remaining', 'defteam_timeouts_remaining', 'wp', 'spread_line', 'home_team', 'away_team'
     ]
 
     # drop rows with missing info

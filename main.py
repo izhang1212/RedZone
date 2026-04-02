@@ -1,22 +1,27 @@
-from data.db import init_DB
-from data.load_pbp import fetch_and_store
+from models.monte_carlo import run_monte_carlo
+from config import NUM_SIMULATIONS
 
 def main():
-    print("--- RedZone System Initialization ---")
+    print("--- RedZone System: Phase 3 ---")
     
-    # Phase 0: Setup Database
-    print("[1/2] Initializing database...")
-    init_DB()
+    # Scenario: 4th Quarter, 5 minutes left, Team A is slightly favored
+    current_wp = 0.60
+    time_left = 300 
     
-    # Part 1: Data Foundation
-    print("[2/2] Fetching NFL play-by-play data (2021-2024)...")
-    try:
-        row_count = fetch_and_store()
-        print(f"Successfully loaded {row_count} plays into RedZone storage.")
-    except Exception as e:
-        print(f"Error loading data: {e}")
+    print(f"[1/1] Running Monte Carlo Simulation...")
+    print(f"  > Current WP: {current_wp:.2%}")
+    print(f"  > Time Remaining: {time_left}s")
+    print(f"  > Simulations: {NUM_SIMULATIONS}")
+    
+    simulated_wp = run_monte_carlo(current_wp, time_left, num_sims=NUM_SIMULATIONS)
+    
+    print(f"\nResulting Simulated Win Probability: {simulated_wp:.2%}")
+    
+    # Internal logic check
+    edge = simulated_wp - current_wp
+    print(f"Variance/Drift adjustment: {edge:+.2%}")
 
-    print("\nPhase 1 Complete. Ready for Part 2: Pregame Model.")
+    print("\nPhase 3 Complete. Ready for Part 4: Drift Function.")
 
 if __name__ == "__main__":
     main()
