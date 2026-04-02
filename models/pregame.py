@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy.stats import norm
+from config import TERMS
 
 # converts an nfl point spread into win 
     # use normal cumulative dist function (norm.cdf) to map spread to prob
@@ -10,7 +11,7 @@ def spread_to_win_prob(spread):
         return 0.5
     # win_prob = norm_cdf(-spread / (std_dev * sqrt(2)))
         # use 13.45 as standard devation of score margins since this is historical SD of NFL outcomes
-    return norm.cdf(-spread / 13.45)
+    return norm.cdf(-spread / TERMS['standard_stdev'])
 
 # extract closing spread from a game and returns the implied prob
 def get_pregame_wp(game_id, pbp_df):

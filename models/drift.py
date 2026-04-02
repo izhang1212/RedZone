@@ -129,7 +129,6 @@ def lookup_empirical_wp(score_diff, time_remaining, yardline_100, home_has_ball)
 # calc drift for the brownian bridge from the current game states
     # returns a value in logit space that shifts the bridge's center
     # (+) = trending toward home win, (-) = tranding toward home loss
-
 def calcuate_drift(game_state):
     score_diff = game_state.get('home_score_diff', 0)
     time_remaining = game_state.get('game_seconds_remaining', 0)
