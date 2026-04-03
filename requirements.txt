@@ -3,6 +3,7 @@ pandas
 scipy
 nfl_data_py
 scikit-learn
+tqdm
 
 requests
 httpx

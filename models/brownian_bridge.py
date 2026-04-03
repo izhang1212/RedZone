@@ -8,19 +8,21 @@ from config import TOTAL_GAME_SECONDS
     # spikes slightly in "clutch time" because teams take more risks (going for it on 4th and long)
 def volatility_schedule(time_pct, score_diff_abs):
     # base vol (decays with time)
-    base = 0.12 * np.sqrt(np.maximum(time_pct, 0.001))
+    base = 0.80 * np.sqrt(np.maximum(time_pct, 0.001))
 
+    # score compression: big leads reduce volatility
     if score_diff_abs > 0:
-        score_dampening = 1.0 / (1.0 + 0.04 * score_diff_abs)
+        score_dampening = 1.0 / (1.0 + 0.03 * score_diff_abs)
     else:
         score_dampening = 1.0
 
+    # clutch boost
     clutch_boost = 1.0
     if time_pct < 0.12 and score_diff_abs <= 8:
         clutch_boost = 1.3
-    elif time_pct <= 0.04 and score_diff_abs <= 16:
+    elif time_pct < 0.04 and score_diff_abs <= 16:
         clutch_boost = 1.5
-    
+
     return base * score_dampening * clutch_boost
 
 # simulate N brownian bridge paths from current wp to game end
@@ -71,7 +73,7 @@ def simulate_bridge_paths(current_wp, time_remaining, game_state = None, num_pat
         if remaining_pct > 0.001:
             # pull toward nearest terminal: logit → +inf (win) or -inf (loss)
             # strength of pull increases as remaining_pct → 0
-            bridge_pull = logit_paths[i, :] * (dt / remaining_pct) * 0.1
+            bridge_pull = logit_paths[i, :] * (dt / remaining_pct) * 0.008
         else:
             bridge_pull = 0.0
 

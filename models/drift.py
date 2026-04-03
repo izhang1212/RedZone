@@ -17,6 +17,8 @@ def score_to_possession_bin(score_diff):
 # finds min number of scoring possessions to cover a deficit
     # uses fact that scores come in 2, 3, 6, 7, 8
 def min_possessions_needed(score_deficit):
+    if score_deficit is None or np.isnan(score_deficit):
+        return 0
     if score_deficit <= 0:
         return 0
     return int(np.ceil(score_deficit / 8))
@@ -28,7 +30,7 @@ def field_position_bin(yardline_100):
         return 2
     return min(int(yardline_100 // 20), 4)
 
-TIME_EDGES = np.array([1, 2, 5, 10, 15, 20, 30, 45, 61])
+TIME_EDGES = np.array([1, 2, 5, 10, 15, 20, 25, 30, 37, 45, 52, 61])
 # bin tiem into game phase
     # minutes matter more towards the end of the game
 def time_to_bin(time_remaining):
@@ -37,12 +39,11 @@ def time_to_bin(time_remaining):
 
 # build drift lookup from historical pbp
     # group game states into bins (score, time, field pos) and computes actual win rate of each bin
-def build_drfit_table(pbp_df):
+def build_drift_table(pbp_df):
     global drift_table
 
     df = pbp_df.copy()
 
-    # create home-perspective cols if they don't exist
     if 'home_score_diff' not in df.columns:
         away_mask = df['posteam'] == df['away_team']
         df['home_score_diff'] = df['score_differential']
@@ -52,26 +53,21 @@ def build_drfit_table(pbp_df):
         df['home_win'] = (df['result'] > 0).astype(float)
         df.loc[df['result'] == 0, 'home_win'] = 0.5
 
-    # when home team has ball
     df['home_has_ball'] = (df['posteam'] == df['home_team']).astype(int)
 
-    # field pos from home perspective
     df['home_field_pos'] = df['yardline_100']
     away_ball = df['home_has_ball'] == 0
     df.loc[away_ball, 'home_field_pos'] = 100 - df.loc[away_ball, 'yardline_100']
 
-    # create bins
     df['score_bin'] = df['home_score_diff'].apply(score_to_possession_bin)
     df['time_bin'] = df['game_seconds_remaining'].apply(time_to_bin)
     df['field_bin'] = df['home_field_pos'].apply(field_position_bin)
 
-    # group and compute emperical win rate
     grouped = df.groupby(['score_bin', 'time_bin', 'field_bin', 'home_has_ball']).agg(
         win_rate=('home_win', 'mean'),
         count=('home_win', 'count')
     ).reset_index()
 
-    # require min sample size to avoid noisy bins
     fallback = df.groupby(['score_bin', 'time_bin']).agg(
         fallback_wr=('home_win', 'mean')
     ).reset_index()
@@ -80,17 +76,12 @@ def build_drfit_table(pbp_df):
 
     min_samples = 30
     low_count = grouped['count'] < min_samples
-
     weight = np.minimum(grouped['count'] / min_samples, 1.0)
     grouped['win_rate'] = weight * grouped['win_rate'] + (1 - weight) * grouped['fallback_wr']
 
     drift_table = grouped.set_index(
         ['score_bin', 'time_bin', 'field_bin', 'home_has_ball']
     )[['win_rate', 'count']]
-
-    total_bins = len(drift_table)
-    covered = (drift_table['count'] >= min_samples).sum()
-    print(f"Drift table built: {total_bins} bins, {covered} with {min_samples}+ samples")
 
     return drift_table
 
@@ -129,7 +120,7 @@ def lookup_empirical_wp(score_diff, time_remaining, yardline_100, home_has_ball)
 # calc drift for the brownian bridge from the current game states
     # returns a value in logit space that shifts the bridge's center
     # (+) = trending toward home win, (-) = tranding toward home loss
-def calcuate_drift(game_state):
+def calculate_drift(game_state):
     score_diff = game_state.get('home_score_diff', 0)
     time_remaining = game_state.get('game_seconds_remaining', 0)
     yardline = game_state.get('yardline_100', 50)
@@ -165,6 +156,10 @@ def calcuate_drift(game_state):
             down_adj = -0.01
 
     adjusted_wp = np.clip(empirical_wp + timeout_adj + down_adj, 0.001, 0.999)
-    drift_logit = np.log(adjusted_wp / (1 - adjusted_wp))
     
+    # guard against NaN
+    if np.isnan(adjusted_wp):
+        adjusted_wp = 0.5
+
+    drift_logit = np.log(adjusted_wp / (1 - adjusted_wp))
     return drift_logit, adjusted_wp

@@ -18,6 +18,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS pbp_data (
             game_id TEXT,
             play_id INTEGER,
+            home_team TEXT,
+            away_team TEXT,
+            posteam TEXT,
             game_seconds_remaining INTEGER,
             score_differential INTEGER,
             down INTEGER,
@@ -25,6 +28,8 @@ def init_db():
             yardline_100 INTEGER,
             posteam_timeouts_remaining INTEGER,
             defteam_timeouts_remaining INTEGER,
+            spread_line REAL,
+            result REAL,
             wp REAL,
             PRIMARY KEY (game_id, play_id)
         )
